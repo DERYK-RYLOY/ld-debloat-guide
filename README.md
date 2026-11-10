@@ -25,9 +25,9 @@ Step-by-step from a stock bloated LDPlayer 9 to a lean, telemetry-free, self-hea
 
 ## The proof
 
-**RAM — before → after** (animated; measured on the reference rig — LD itself idles at ~150–600 MB, the win is the headroom around it):
+**RAM, honestly (animated)** — guest-visible RAM decides swap or stability; the freeze was never "LD eats 3 GB":
 
-<img src="assets/benchmark-01-ram-before-after.svg" alt="RAM before after" width="100%">
+<img src="assets/benchmark-01-ram-before-after.svg" alt="RAM, the honest version: guest-visible RAM before/after, LD process tree, host free RAM not attributable to LD" width="100%">
 
 **The fixes that froze the machine — and how the fix stands:**
 
@@ -43,12 +43,13 @@ Step-by-step from a stock bloated LDPlayer 9 to a lean, telemetry-free, self-hea
 
 ---
 
-## What changed on this machine (same numbers as the benchmarks)
+## What the debloat actually changed (measured — no averages, no vibes)
 
 | | Before | After |
 |---|---|---|
-| Host free RAM (Brave open, same box) | **0.77 GB** → swap, "Not Responding" | **3.35 GB** → healthy |
-| Guest CPU / RAM | 4 CPU / 4096 MB → freezes, 16-s boot wedge | **3 CPU / 3072 MB cap** → stable |
+| Guest visible RAM | 4096 MB/4 CPU → swap storm · 2048 MB → 16-s boot wedge ×2 | **3072 MB / 3 CPU cap — stable boots** |
+| LD background tree | partner ×2 + LDReporter (POST 200) + `LDPlayerENSvr` auto | **engine + dnplayer + multi-manager only · 0 telemetry** |
+| Host free RAM | ~0.8 GB under full load | ~0.8 GB under full load (dominated by Brave + Windows — **not an LD win**) |
 | Telemetry | POST HTTP 200 at 10:39 (today) | Zero reachable endpoints, pins to 2100 |
 | App-store hijack | Google Play installs → LD-store twins | Dead (`ldmarket://` → No activity found) |
 | Packages in-guest | 81 with LD bloat enabled | 84: LD bloat disabled; Lawnchair · Aurora · Magisk installed |
