@@ -22,13 +22,9 @@ Step-by-step from a stock bloated LDPlayer 9 to a lean, telemetry-free, self-hea
 
 ---
 
-## What the debloat actually changed
-
-No charts on this page on purpose. The numbers people care about are the ones in the table below — they are what this machine weighed before and after, once, measured. Everything else lives in the PDF (which carries the exact commands and the log transcripts).
-
----
-
 ## What the debloat actually changed (measured — no averages, no vibes)
+
+No charts on purpose. These are the numbers this machine weighed before and after — measured, once, with the commands to reproduce them inside the PDF (Appendix G).
 
 | | Before | After |
 |---|---|---|
