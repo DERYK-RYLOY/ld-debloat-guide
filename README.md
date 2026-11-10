@@ -9,7 +9,6 @@
   <img alt="License" src="https://img.shields.io/badge/license-MIT-12b7a8?style=flat-square">
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows-16324a?style=flat-square">
   <img alt="LDPlayer" src="https://img.shields.io/badge/LDPlayer-9.5.41.1-e4572e?style=flat-square">
-  <img alt="Checks" src="https://img.shields.io/badge/checks-25%20Windows%20%2B%2011%20Android%20PASS-2fbf71?style=flat-square">
   <img alt="Windows 10 Lite" src="https://img.shields.io/badge/Windows%2010%20Lite-never%20modified-f2b64a?style=flat-square">
 </p>
 
@@ -23,23 +22,9 @@ Step-by-step from a stock bloated LDPlayer 9 to a lean, telemetry-free, self-hea
 
 ---
 
-## The proof
+## What the debloat actually changed
 
-**RAM, honestly (animated)** — guest-visible RAM decides swap or stability; the freeze was never "LD eats 3 GB":
-
-<img src="assets/benchmark-01-ram-before-after.svg" alt="RAM, the honest version: guest-visible RAM before/after, LD process tree, host free RAM not attributable to LD" width="100%">
-
-**The fixes that froze the machine — and how the fix stands:**
-
-<img src="assets/benchmark-03-checks-and-tuning.png" alt="Checks grows 19 → 25 → 36 · Guest tuning 4096/2048/3072" width="100%">
-
-**What got vaulted — 875 MB, not deleted** (everything reversible):
-
-<img src="assets/benchmark-02-vaulted-875MB.png" alt="Vaulted contents" width="100%">
-
-**Before → after, one look:**
-
-<img src="assets/benchmark-04-before-after-table.png" alt="Before and after table" width="100%">
+No charts on this page on purpose. The numbers people care about are the ones in the table below — they are what this machine weighed before and after, once, measured. Everything else lives in the PDF (which carries the exact commands and the log transcripts).
 
 ---
 
