@@ -1,0 +1,226 @@
+<!-- ============ S5 ============ -->
+<section id="s5">
+<h2 class="part"><small>THE MEAT</small><span class="no">05</span>The Steps, 0&ndash;13</h2>
+<p class="muted">Difficulty: <span class="chip easy">EASY</span> &middot; <span class="chip medium">MEDIUM</span> &middot; <span class="chip hard">HARD</span> &middot; <span class="chip expert">EXPERT</span> &middot; Every command shown here works as printed. Where your install differs, change the path, not the shape of the step.</p>
+
+<!-- STEP 0 -->
+<div class="step"><div class="step-head"><span class="step-num">0</span><span class="step-title">The 30-second symptom check</span></div>
+<div class="step-meta"><span class="chip easy">EASY</span> <span class="chip time">~1 min</span> <span class="chip time">risk: none</span></div>
+<div class="step-body">
+<h4>WHY</h4><p>Confirm that the thing that is bugging you is LDPlayer and not Windows, your keyboard driver, or your browser.</p>
+<h4>LOOK FOR</h4>
+<ul>
+<li>Ads, recommendations or app-store suggestions inside the LDPlayer window you never asked for.</li>
+<li>Desktop pop-ups when LDPlayer is not running.</li>
+<li>Slow boots into the guest or a guest that freezes at roughly the same second on every cold boot.</li>
+</ul>
+<h4>IF YES</h4><p>Proceed. If none of those apply, close this guide &mdash; you do not have the disease it treats.</p>
+</div></div>
+
+<!-- STEP 1 -->
+<div class="step"><div class="step-head"><span class="step-num">1</span><span class="step-title">Install the toolkit (2 minutes)</span></div>
+<div class="step-meta"><span class="chip easy">EASY</span> <span class="chip time">~2 min</span> <span class="chip time">risk: none</span></div>
+<div class="step-body">
+<h4>DO THIS</h4>
+<p>Copy the five scripts shipped in this guide's repository (folder <code>scripts/</code>) into <code>C:\LDPlayer\</code>:</p>
+<pre class="cmd">New-Item -ItemType Directory -Force -Path C:\LDPlayer | Out-Null
+Copy-Item \".\scripts\reapply-debloat.ps1\"   C:\LDPlayer\reapply-debloat.ps1
+Copy-Item \".\scripts\clean-launch.ps1\"      C:\LDPlayer\clean-launch.ps1
+Copy-Item \".\scripts\android-refresh.ps1\"   C:\LDPlayer\android-refresh.ps1
+Copy-Item \".\scripts\verify-debloat.ps1\"    C:\LDPlayer\verify-debloat.ps1
+Copy-Item \".\scripts\verify-android.ps1\"    C:\LDPlayer\verify-android.ps1</pre>
+<p class="muted">Or copy the five files by hand with Explorer &mdash; drag &amp; drop into <code>C:\LDPlayer</code>. That is the whole install.</p>
+<h4>TEST IT</h4>
+<pre class="cmd">powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\LDPlayer\verify-debloat.ps1</pre>
+<p>Expect a list of <code>[PASS]</code> lines and a final <code>RESULT</code> line. The first run may show FAILs for things the debloat fixes &mdash; that is expected; run it again after Step 3.</p>
+</div></div>
+
+<!-- STEP 2 -->
+<div class="step"><div class="step-head"><span class="step-num">2</span><span class="step-title">Photo the evidence BEFORE changing anything</span></div>
+<div class="step-meta"><span class="chip easy">EASY</span> <span class="chip time">~5 min</span> <span class="chip time">risk: none</span></div>
+<div class="step-body">
+<h4>WHY</h4>
+<p>Enables you (or anyone helping you) to prove what was original after the fact, and forces you to look at the actual install before any checklist.</p>
+<h4>DO THIS</h4>
+<pre class="cmd">& "C:\LDPlayer\LDPlayer9\ldconsole.exe" list
+& "C:\LDPlayer\LDPlayer9\ldconsole.exe" list2
+(Get-Item "C:\LDPlayer\LDPlayer9\dnplayer.exe").VersionInfo.ProductVersion
+Get-Service LDPlayerENSvr
+Get-Content "C:\LDPlayer\LDPlayer9\vms\config\leidians.config" -ErrorAction SilentlyContinue | Select-Object -Last 6</pre>
+<p>LDPlayer 9 installs at <code>C:\LDPlayer\LDPlayer9</code> in the default case. If yours lives elsewhere, substitute your install path; every step in this guide finds the folder itself.</p>
+</div></div>
+
+<!-- STEP 3 -->
+<div class="step"><div class="step-head"><span class="step-num">3</span><span class="step-title">Wave 1 &mdash; vault the classic bloat</span></div>
+<div class="step-meta"><span class="chip easy">EASY</span> <span class="chip time">~3 min</span> <span class="chip time">risk: none &mdash; moves only, zero deletes</span></div>
+<div class="step-body">
+<h4>WHAT IT DOES</h4>
+<p><code>reapply-debloat.ps1</code> moves the known offenders into a timestamped vault folder. It never deletes &mdash; if something breaks, the files are visible, named and in one place.</p>
+<pre class="cmd">powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\LDPlayer\reapply-debloat.ps1</pre>
+<h4>EXPECTED RESULT</h4>
+<p>Lines like <code>vaulted: ...\ldplayerpartner.exe</code> and <code>ad cache sealed (deny Everyone write)</code>. Then re-run Step 1's verifier and watch every line flip to <code>[PASS]</code>.</p>
+</div></div>
+
+<!-- STEP 4 -->
+<div class="step"><div class="step-head"><span class="step-num">4</span><span class="step-title">Seal the ad cache</span></div>
+<div class="step-meta"><span class="chip medium">MEDIUM</span> <span class="chip time">~3 min</span> <span class="chip time">risk: low</span></div>
+<div class="step-body">
+<h4>THE WHY</h4>
+<p>The cache folder is where the current ad payloads are kept between launches. Emptying alone is not enough &mdash; LDPlayer re-downloads them. A deny-write ACE makes the folder permanently useless to it.</p>
+<h4>WHAT THE SCRIPT DOES</h4>
+<p><code>reapply-debloat.ps1</code> already performs this &mdash; moves contents into the vault, then adds a single Deny ACE: Everyone, Write, inherited by children. Nothing else in the ACL is touched.</p>
+<div class="callout infobox"><b>Verified:</b> after the seal, a file write to the cache fails with access denied. If it does not, your account is not elevated &mdash; re-run as administrator.</div>
+</div></div>
+
+<!-- STEP 5 -->
+<div class="step"><div class="step-head"><span class="step-num">5</span><span class="step-title">Re-pin update &amp; telemetry timestamps</span></div>
+<div class="step-meta"><span class="chip medium">MEDIUM</span> <span class="chip time">~2 min</span> <span class="chip time">risk: low</span></div>
+<div class="step-body">
+<h4>THE WHY</h4>
+<p><code>leidians.config</code> holds timestamps that tell LDPlayer when to call home and when to look for an update. Its update re-arms these to "now" on every install; the script pins them to 2100 again.</p>
+<pre class="cmd">powershell -ExecutionPolicy Bypass -File C:\LDPlayer\reapply-debloat.ps1</pre>
+<p>Expected: <code>leidians.config pins re-applied (present keys only)</code>. Keys that do not exist in your LDPlayer version are skipped rather than invented.</p>
+<div class="callout infobox"><b>Note:</b> this step is idempotent and also self-healing &mdash; it is re-applied at every run of the reapply script, so an update re-arming the pins is defeated automatically.</div>
+</div></div>
+
+<!-- STEP 6 -->
+<div class="step"><div class="step-head"><span class="step-num">6</span><span class="step-title">CPU &amp; RAM tuning &mdash; the 3072 rule</span></div>
+<div class="step-meta"><span class="chip hard">HARD</span> <span class="chip time">~10 min + one test boot</span> <span class="chip time">risk: medium</span></div>
+<div class="step-body">
+<h4>THE RULE</h4>
+<p>Give the guest no more than ~40% of host memory when anything else is running (a browser tab, a game, an IDE) &mdash; and no more than ~50% ever. On a memory-tight box that is almost always <b>2048&ndash;4096 MB</b> depending on hardware. <b>3072 MB with 3 CPUs is the measured sweet spot for an 8 GB host.</b></p>
+<h4>HOW</h4>
+<p>The script sets CPU back to 3 with LD's own <code>ldconsole</code>:</p>
+<pre class="cmd">& "C:\LDPlayer\LDPlayer9\ldconsole.exe" modify --index 0 --cpu 3</pre>
+<p>Memory is set inside <code>leidian.vbox</code> (<code>RAMSize</code> value) and is written out by LD on launch, so do not edit it while LDPlayer is running.</p>
+<h4>WHY IT IS THE HARDEST STEP</h4>
+<p>Machines that are not memory-constrained pass Step 6 painlessly; machines that are will boot-slow or wedge until the memory is lowered. If Boot loops twice identically, reduce by 512 MB and test again.</p>
+</div></div>
+
+<!-- STEP 7 -->
+<div class="step"><div class="step-head"><span class="step-num">7</span><span class="step-title">Kill the service</span></div>
+<div class="step-meta"><span class="chip medium">MEDIUM</span> <span class="chip time">~2 min</span> <span class="chip time">risk: low</span></div>
+<div class="step-body">
+<h4>WHY</h4>
+<p><code>LDPlayerENSvr</code> (name varies by build &mdash; LDPlayerENSvc / LDPlayerServiceEN also appear) auto-starts the launcher plumbing. It is not required for the emulator to run; it is the delivery mechanism for the ad channels.</p>
+<pre class="cmd">Get-Service LDPlayerENSvr -ErrorAction SilentlyContinue | Select-Object Status, StartType
+Stop-Service LDPlayerENSvr -Force -ErrorAction SilentlyContinue
+Set-Service LDPlayerENSvr -StartupType Disabled</pre>
+<p class="muted">The reapply script does the same thing with tolerance for missing services.</p>
+</div></div>
+
+<!-- STEP 8 -->
+<div class="step"><div class="step-head"><span class="step-num">8</span><span class="step-title">Network layers: hosts + firewall</span></div>
+<div class="step-meta"><span class="chip medium">MEDIUM</span> <span class="chip time">~4 min</span> <span class="chip time">risk: low</span></div>
+<div class="step-body">
+<h4>LAYER A &mdash; marked hosts block</h4>
+<p>Ten domains map to 0.0.0.0 under a fence. Nothing else in the file changes:</p>
+<pre class="cmd">$block = @"
+
+# LDPlayer-Debloat-Block-Begin (LDPlayer ad/telemetry endpoints)
+0.0.0.0 ldrescdn.com
+0.0.0.0 res.ldrescdn.com
+0.0.0.0 img.ldrescdn.com
+0.0.0.0 tj.ldmnq.com
+0.0.0.0 ad.ldmnq.com
+0.0.0.0 ads.ldplayer.net
+0.0.0.0 report.ldmnq.com
+0.0.0.0 alog.ldmnq.com
+0.0.0.0 data.ldplayer.net
+0.0.0.0 res.ldplayer.net
+# LDPlayer-Debloat-Block-End
+"@
+[IO.File]::AppendAllText("C:\Windows\System32\drivers\etc\hosts", $block, (New-Object Text.ASCIIEncoding))</pre>
+<h4>LAYER B &mdash; program-scoped firewall blocks</h4>
+<p>Five outbound Block rules named <code>LDPlayerBlock-*</code>, one per ad/telemetry executable. Because they are scoped by program path, LD's next update cannot rotate the domains past them.</p>
+<p class="muted">Both layers are applied automatically by <code>reapply-debloat.ps1</code>. No extra command is needed.</p>
+</div></div>
+
+<!-- STEP 9 -->
+<div class="step"><div class="step-head"><span class="step-num">9</span><span class="step-title">Wave 2 &mdash; the deep sweep</span></div>
+<div class="step-meta"><span class="chip medium">MEDIUM</span> <span class="chip time">~10 min</span> <span class="chip time">risk: low</span></div>
+<div class="step-body">
+<h4>WHY</h4>
+<p>The "classic" cleanup covers the advertised files; the install root ships a second telemetry stack that classic guides never look at. <code>reapply-debloat.ps1</code> removes them too:</p>
+<ul>
+<li><b>upload\</b> &mdash; a Huawei OBS crash-telemetry SDK (<code>ldupload.exe</code> + associated DLLs). Vaulted wholesale; firewall-blocked in Step 8.</li>
+<li><b>Manager's bugreport.exe</b> &mdash; a second reporter beside the one in LDPlayer9. Found only by inventoring the whole tree.</li>
+<li><b>App-store intercept feed</b> &mdash; <code>Documents\XuanZhi9\Applications\ld_launcher\</code> + <code>cpi.data</code> + a fetch-stamp (hex-named). Redirects Google Play installs to the LD-store.</li>
+<li><b>Recommendation DB</b> &mdash; <code>vms\recommendConfigs\dir_*.dir</code> + <code>package_configs_1005*</code>. Game suggestions with ad placements.</li>
+<li><b>partner_report.data</b> &mdash; the 10-byte file that witnesses the last successful report POST.</li>
+</ul>
+<p class="muted">Every one of these is re-vaulted automatically at each run of the reapply script.</p>
+</div></div>
+
+<!-- STEP 10 -->
+<div class="step"><div class="step-head"><span class="step-num">10</span><span class="step-title">Permanence &mdash; the logon enforcement task</span></div>
+<div class="step-meta"><span class="chip hard">HARD</span> <span class="chip time">~5 min</span> <span class="chip time">risk: low</span></div>
+<div class="step-body">
+<h4>WHY</h4>
+<p>Updates restore everything you removed &mdash; not because they are malicious, because LD ships in one piece and the update is that piece. A logon-triggered hidden task re-runs the reapply script so the debloat survives updates indefinitely.</p>
+<pre class="cmd">$action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File C:\LDPlayer\reapply-debloat.ps1'
+$trigger = New-ScheduledTaskTrigger -AtLogOn -User &quot;$env:USERDOMAIN\$env:USERNAME&quot;
+$principal = New-ScheduledTaskPrincipal -UserId &quot;$env:USERDOMAIN\$env:USERNAME&quot; -RunLevel Highest -LogonType Interactive
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 5) -Hidden
+Register-ScheduledTask -TaskName 'LDPlayerDebloatEnforce' -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force</pre>
+<h4>PROVE IT</h4>
+<pre class="cmd">Start-ScheduledTask -TaskName 'LDPlayerDebloatEnforce'
+(Get-ScheduledTaskInfo -TaskName 'LDPlayerDebloatEnforce').LastTaskResult</pre>
+<p>Expect <code>0</code>.</p>
+</div></div>
+
+<!-- STEP 11 -->
+<div class="step"><div class="step-head"><span class="step-num">11</span><span class="step-title">Prove it &mdash; the verifiers</span></div>
+<div class="step-meta"><span class="chip easy">EASY</span> <span class="chip time">~1 min each</span> <span class="chip time">risk: none</span></div>
+<div class="step-body">
+<h4>WINDOWS SIDE</h4>
+<pre class="cmd">powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\LDPlayer\verify-debloat.ps1</pre>
+<div class="terminal">RESULT: ALL CHECKS PASSED            # exit code 0</div>
+<h4>ANDROID SIDE (run with the emulator up)</h4>
+<pre class="cmd">powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\LDPlayer\verify-android.ps1</pre>
+<div class="terminal">RESULT: ALL ANDROID CHECKS PASSED    # or SKIP if the emulator is not up</div>
+<p class="muted">Both scripts print one line per check and set the exit code to the number of FAILs. A single FAIL names exactly which check failed.</p>
+</div></div>
+
+<!-- STEP 12 -->
+<div class="step"><div class="step-head"><span class="step-num">12</span><span class="step-title">Inside Android (ADB)</span></div>
+<div class="step-meta"><span class="chip expert">EXPERT</span> <span class="chip time">~15 min</span> <span class="chip time">risk: medium</span></div>
+<div class="step-body">
+<h4>WHY THIS IS A SEPARATE STEP</h4>
+<p>Steps 1&ndash;11 fix Windows-side plumbing. The LD-store engine lives <em>inside the guest</em>, and only answers to ADB. An update can also reset the in-guest changes on re-image, so this step is rerunnable by design.</p>
+<h4>1 &mdash; Enable ADB debugging</h4>
+<p>LDPlayer &rarr; gear icon &rarr; Other &rarr; <b>ADB debugging: ON</b>. If this is off, every command below returns nothing. Every LD update turns it back off.</p>
+<h4>2 &mdash; Install the replacements</h4>
+<pre class="cmd">& "C:\LDPlayer\LDPlayer9\adb.exe" install -r "C:\ld-apps\Lawnchair.apk"
+& "C:\LDPlayer\LDPlayer9\adb.exe" install -r "C:\ld-apps\Aurora.apk"
+& "C:\LDPlayer\LDPlayer9\adb.exe" install -r "C:\ld-apps\Magisk.apk"</pre>
+<p class="muted">Pickers for the APKs: Lawnchair 1.2.0 &#8594; <code>github.com/LawnchairLauncher/lawnchair/releases</code> &nbsp;&middot;&nbsp; Aurora Store &#8594; <code>f-droid.org/packages/com.aurora.store</code> &nbsp;&middot;&nbsp; Magisk &#8594; <code>github.com/topjohnwu/Magisk/releases</code>. Verify package names with <code>aapt dump badging</code> before installing anything.</p>
+<h4>3 &mdash; Disable LD's own apps (matched by name pattern)</h4>
+<pre class="cmd">& "C:\LDPlayer\LDPlayer9\adb.exe" shell cmd package disable-user --user 0 com.ldmnq.launcher3
+& "C:\LDPlayer\LDPlayer9\adb.exe" shell cmd package disable-user --user 0 com.android.ld.appstore</pre>
+<h4>4 &mdash; Home screen</h4>
+<pre class="cmd">& "C:\LDPlayer\LDPlayer9\adb.exe" shell cmd package set-home-activity ch.deletescape.lawnchair/ch.deletescape.lawnchair.Launcher</pre>
+<h4>5 &mdash; Ad-blocking DNS</h4>
+<pre class="cmd">& "C:\LDPlayer\LDPlayer9\adb.exe" shell settings put global private_dns_mode hostname
+& "C:\LDPlayer\LDPlayer9\adb.exe" shell settings put global private_dns_specifier dns.adguard.com</pre>
+<h4>6 &mdash; The one step that is yours alone</h4>
+<p><b>Magisk &rarr; Install &rarr; Direct install &rarr; Reboot.</b> Until this is done, <code>su -c id</code> correctly reports root not live.</p>
+</div></div>
+
+<!-- STEP 13 -->
+<div class="step"><div class="step-head"><span class="step-num">13</span><span class="step-title">Live clean forever</span></div>
+<div class="step-meta"><span class="chip easy">EASY</span> <span class="chip time">~2 min per update</span> <span class="chip time">risk: none</span></div>
+<div class="step-body">
+<h4>THE ROUTINE</h4>
+<ol>
+<li>Open LDPlayer exclusively via the <b>Clean Launch</b> shortcut, never the stock icon.</li>
+<li>Close what you are not actively using &mdash; LD will take whatever memory it is left.</li>
+<li>After any LDPlayer update: log off and back on, then run both verifiers. Any FAIL is fixed by re-running <code>reapply-debloat.ps1</code> and <code>android-refresh.ps1</code>.</li>
+<li>Thirty quiet days in a row: delete <code>C:\LDPlayer\vault</code> to reclaim disk.</li>
+</ol>
+<h4>THE CLEAN LAUNCH SHORTCUT</h4>
+<p><code>clean-launch.ps1</code> debloats, launches LDPlayer, then re-sweeps 75 seconds later &mdash; after the launch-time re-download lands. One double-click, nothing else.</p>
+<pre class="cmd">powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\LDPlayer\clean-launch.ps1</pre>
+<p class="muted">Make it a shortcut on the desktop (right-click &rarr; New &rarr; Shortcut &rarr; paste <code>powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File C:\LDPlayer\clean-launch.ps1</code>) and bind the stock LDPlayer icon to it.</p>
+</div></div>
+</section>

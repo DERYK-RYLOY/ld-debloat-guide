@@ -1,0 +1,252 @@
+<!-- ============ S6 ============ -->
+<section id="s6">
+<h2 class="part"><small>WHEN THINGS BREAK</small><span class="no">06</span>Errors &amp; fixes</h2>
+
+<h3 class="sub">The two classes (learn to tell them apart)</h3>
+<div class="callout warnbox"><b>CLASS A — Deterministic:</b> same spot, same signature, two times in a row (an admin refusal; a boot wedge at the same second). It never fixes itself. <b>Change the variable, not your mood.</b></div>
+<div class="callout infobox"><b>CLASS B — Load-dependent:</b> only happens when the machine is saturated (a game, a browser, an IDE and LD competing for the same memory). <b>It is not a bug; it is arithmetic.</b> Step 6 exists for exactly this class.</div>
+
+<h3 class="sub">The field list</h3>
+<table>
+<thead><tr><th>#</th><th>What you see</th><th>Cause</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><code>run player with no Admin error</code> in logs / LDPlayer silently refuses to start</td><td>The engine requires elevation</td><td>Launch LDPlayer <b>as administrator</b></td></tr>
+<tr><td>2</td><td>Boot freezes at roughly the same second, twice</td><td>Guest RAM too small for first boot</td><td>Raise to 3072 MB; re-test; boot&times;2 identical &#8594; reduce and re-test</td></tr>
+<tr><td>3</td><td>"Not Responding", fan noise, stutter</td><td>Host starved: the guest reservation exceeds the host's surplus</td><td>Cap the guest at 3072 MB &middot; close what you do not need &middot; re-run Step 6</td></tr>
+<tr><td>4</td><td><code>adb devices</code> empty with Android visibly running</td><td>ADB debugging flag is off</td><td>LDPlayer &#8594; gear &#8594; Other &#8594; <b>ADB debugging: ON</b></td></tr>
+<tr><td>5</td><td>"Access is denied" writing into <code>%APPDATA%\XuanZhi9\cache</code></td><td>ACL deny ACE got removed or corrupt</td><td>Re-run <code>reapply-debloat.ps1</code> as administrator; step 2 re-seals</td></tr>
+<tr><td>6</td><td>"This app can't run on your PC" / blank window on launch</td><td>Instance's CPU count became 4 on a starved host</td><td><code>ldconsole modify --index 0 --cpu 3</code></td></tr>
+<tr><td>7</td><td>Verifier prints garbage for HOME resolution</td><td>Command-line flag confusion on Android 9</td><td><code>cmd package resolve-activity --brief … HOME</code> directly; trust <code>isDefault=true</code></td></tr>
+<tr><td>8</td><td><code>VERR_*</code> errors or VM "not responding"</td><td>Hand-edited <code>leidian.vbox</code> with the emulator running</td><td>Never edit it live; quit LDPlayer, edit, relaunch; check <code>vms\leidian0\Logs\VBox.log</code> tail</td></tr>
+<tr><td>9</td><td>Everything reverted after an update</td><td>Updates re-ship their own bloat</td><td>Sign out and back in &mdash; the logon task re-fixes; verify with <code>verify-debloat.ps1</code></td></tr>
+<tr><td>10</td><td>Task Scheduler reports the task ran but FAIL persists</td><td>Path changed or task lacked highest privileges</td><td>Re-create the task with <code>-RunLevel Highest</code></td></tr>
+<tr><td>11</td><td>Ads still visible in the guest</td><td>In-guest LD store installed / LD launcher enabled</td><td>Re-run Step 12 (or <code>android-refresh.ps1</code>)</td></tr>
+<tr><td>12</td><td>Update check keeps offering builds</td><td><code>nextCheckupdateTime</code> re-armed to now</td><td>Re-run <code>reapply-debloat.ps1</code>; it pins to 2100</td></tr>
+<tr><td>13</td><td>LDPlayer refuses to <code>repair</code> / "installer not found"</td><td><code>dnrepairer.exe</code> missing (this guide removes it)</td><td>There is no repair. The install is either stable or reinstalled from the original installer</td></tr>
+<tr><td>14</td><td><code>adb kill-server</code> refused; port 5037 in use</td><td>Another ADB server on this machine</td><td><code>& "C:\LDPlayer\LDPlayer9\adb.exe" kill-server</code> then relaunch LDPlayer</td></tr>
+<tr><td>15</td><td>Verifier exits non-zero</td><td>One or more FAIL lines &mdash; that is the exit code's meaning</td><td>Read each FAIL; run <code>reapply-debloat.ps1</code>; re-check</td></tr>
+<tr><td>16</td><td>Ads/recommendations reappear between reboots</td><td>LD re-downloads its ad feed ~2 minutes after every launch</td><td>The <b>Clean Launch</b> shortcut watches and re-vaults it; or run <code>reapply-debloat.ps1</code> after every session</td></tr>
+<tr><td>17</td><td><code>su: not found</code> despite Magisk installed</td><td>Boot image is unpatched</td><td>Magisk &rarr; Install &rarr; Direct install &rarr; Reboot</td></tr>
+<tr><td>18</td><td>ADB debugging was off again after an update</td><td>Updates turn it off</td><td>Gear &rarr; Other &rarr; ADB debugging: ON (re-check after every update)</td></tr>
+<tr><td>19</td><td>Home screen shows LD launcher after an update</td><td>The update re-imaged the guest</td><td>Re-run Step 12 (or <code>android-refresh.ps1</code>)</td></tr>
+</tbody></table>
+</section>
+
+<!-- ============ S7 ============ -->
+<section id="s7">
+<h2 class="part"><small>THE TOOLKIT</small><span class="no">07</span>Your new toolkit</h2>
+<p>All five files ship in this guide's repository under <code>scripts/</code>. Copy them to <code>C:\LDPlayer\</code>. They find your install automatically.</p>
+<table>
+<thead><tr><th>File</th><th>Does what</th><th>Run it when</th></tr></thead>
+<tbody>
+<tr><td><code>C:\LDPlayer\reapply-debloat.ps1</code></td><td>Master fixer: vaults restored bloat, re-seals the cache, re-pins 2100, disables the service, re-ensures hosts + firewall, and (when the emulator is attached) re-applies the Android side. Self-elevates. Idempotent.</td><td>After every update, after every error, or whenever the verifier reports FAIL. Safe to run any time.</td></tr>
+<tr><td><code>C:\LDPlayer\clean-launch.ps1</code></td><td>Debloat &rarr; launch LDPlayer (index 0) &rarr; detached watcher re-sweeps ~75 s later</td><td><b>Every launch</b>, instead of the stock icon</td></tr>
+<tr><td><code>C:\LDPlayer\android-refresh.ps1</code></td><td>Inside-Android re-apply: LD packages disabled (pattern-matched), Private DNS=adguard, Lawnchair re-set as HOME</td><td>After any update that re-imaged the guest, or if the guest looks wrong</td></tr>
+<tr><td><code>C:\LDPlayer\verify-debloat.ps1</code></td><td>Read-only audit (Windows side). One line per check, exit code = number of FAILs.</td><td>After any update</td></tr>
+<tr><td><code>C:\LDPlayer\verify-android.ps1</code></td><td>Read-only audit (Android side). One line per check, exit code = number of FAILs.</td><td>After any update, with the emulator running</td></tr>
+<tr><td>Scheduled task <code>LDPlayerDebloatEnforce</code></td><td>Runs the reapply script at every logon, hidden, highest privileges</td><td>Never run it by hand &mdash; that is the point</td></tr>
+</tbody></table>
+
+<h3 class="sub">What each command prints</h3>
+<pre class="cmd">RESULT: ALL CHECKS PASSED                      # verify-debloat.ps1 — exit code 0
+RESULT: 0 problem(s) found                   # or, failing that, the named checks
+RESULT: ALL ANDROID CHECKS PASSED            # verify-android.ps1 — or SKIP if emulator is down</pre>
+
+<h3 class="sub">The folder map</h3>
+<pre class="cmd">C:\LDPlayer\
+ ├─ LDPlayer9\            &larr; your install (or LDPlayer12 / LDPlayer5 / ...)
+ ├─ ldmutiplayer\         &larr; multi-instance manager
+ ├─ vault\                &larr; everything that was moved here, never deleted
+ ├─ reapply-log.txt       &larr; every reapply run, timestamped
+ ├─ android-refresh-log.txt &larr; every Android-side run, timestamped
+ └─ reapply-debloat.ps1 / clean-launch.ps1 / android-refresh.ps1 / verify-debloat.ps1 / verify-android.ps1
+
+%APPDATA%\XuanZhi9\cache  &larr; sealed; holds nothing
+Documents\XuanZhi9\Applications &larr; LD-store staging; removed</pre>
+</section>
+
+<!-- ============ S8 ============ -->
+<section id="s8">
+<h2 class="part"><small>SCOPE SUMMARY</small><span class="no">08</span>Difficulty &times; time &times; risk</h2>
+<table>
+<thead><tr><th>Step</th><th>Do what</th><th>Difficulty</th><th>Time</th><th>Risk</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>Symptom check</td><td><span class="chip easy">EASY</span></td><td>1 min</td><td>none</td></tr>
+<tr><td>1</td><td>Install toolkit</td><td><span class="chip easy">EASY</span></td><td>2 min</td><td>none</td></tr>
+<tr><td>2</td><td>Photo evidence</td><td><span class="chip easy">EASY</span></td><td>5 min</td><td>none</td></tr>
+<tr><td>3</td><td>Vault classic bloat</td><td><span class="chip easy">EASY</span></td><td>3 min</td><td>none</td></tr>
+<tr><td>4</td><td>Seal the ad cache</td><td><span class="chip medium">MEDIUM</span></td><td>3 min</td><td>low</td></tr>
+<tr><td>5</td><td>Re-pin timestamps</td><td><span class="chip medium">MEDIUM</span></td><td>2 min</td><td>low</td></tr>
+<tr><td>6</td><td>Size guest RAM/CPU</td><td><span class="chip hard">HARD</span></td><td>10 min</td><td>medium</td></tr>
+<tr><td>7</td><td>Disable the service</td><td><span class="chip medium">MEDIUM</span></td><td>2 min</td><td>low</td></tr>
+<tr><td>8</td><td>Hosts + firewall layers</td><td><span class="chip medium">MEDIUM</span></td><td>4 min</td><td>low</td></tr>
+<tr><td>9</td><td>Deep sweep (upload SDK + hijack feed)</td><td><span class="chip hard">HARD</span></td><td>10 min</td><td>low</td></tr>
+<tr><td>10</td><td>Logon enforcement task</td><td><span class="chip hard">HARD</span></td><td>5 min</td><td>low</td></tr>
+<tr><td>11</td><td>Verify (both verifiers)</td><td><span class="chip easy">EASY</span></td><td>2 min</td><td>none</td></tr>
+<tr><td>12</td><td>Inside Android (ADB)</td><td><span class="chip expert">EXPERT</span></td><td>15 min</td><td>medium</td></tr>
+<tr><td>13</td><td>Living clean</td><td><span class="chip easy">EASY</span></td><td>2 min per update</td><td>none</td></tr>
+</tbody></table>
+<p class="muted">Total elbow-grease: about 60&ndash;90 minutes once, then ~2 minutes per LDPlayer update, forever.</p>
+</section>
+
+<!-- ============ S9 ============ -->
+<section id="s9">
+<h2 class="part"><small>SPEAK THE LANGUAGE</small><span class="no">09</span>Glossary</h2>
+<div class="two-col">
+<h3 class="sub">A&ndash;C</h3>
+<p class="kv"><b>ACE</b> — a single permission rule inside a file/folder's ACL. We use one <b>deny-write</b> ACE.<br>
+<b>ACL</b> — the rule list that says who may read, write or run an object.<br>
+<b>ADB</b> — Android Debug Bridge: the wire that lets your PC talk into the emulator.<br>
+<b>Aurora Store</b> — clean front-end for Play.<br>
+<b>App-store intercept</b> — LD-store redirect rules for Google Play installs (Class 2).</p>
+
+<h3 class="sub">D&ndash;H</h3>
+<p class="kv"><b>dnplayer</b> — LDPlayer's engine (VirtualBox-based).<br>
+<b>Disable-user</b> — Android's drop-in replacement for "uninstall a system app for this user".<br>
+<b>Direct install</b> — Magisk's button that patches the boot image; without it root does not exist.<br>
+<b>Emulator</b> — the running Android inside LDPlayer.<br>
+<b>exit code</b> — a number a program returns; 0 = fine.</p>
+
+<h3 class="sub">I&ndash;L</h3>
+<p class="kv"><b>Idempotent</b> — running it again changes nothing.<br>
+<b>interceptTiming</b> — inside LD's JSON: <i>when</i> to hijack.<br>
+<b>LD-store</b> — LD's own app store; where intercepts are sent.<br>
+<b>Launcher</b> — the Android home-screen app (Lawnchair is the replacement).</p>
+
+<h3 class="sub">M&ndash;Z</h3>
+<p class="kv"><b>Magisk</b> — root manager.<br>
+<b>Private DNS</b> — forces DNS through your chosen (ad-blocking) resolver.<br>
+<b>Private DNS specifier</b> — the hostname of that resolver (<code>dns.adguard.com</code>).<br>
+<b>Recommendation DB</b> — <code>dir_*.dir</code>: "great games for you" with ads.<br>
+<b>The pin</b> — the far-future timestamps in <code>leidians.config</code>.<br>
+<b>ldmarket://</b> — the LD-store URI scheme.<br>
+<b>VBox.log</b> — the VM's flight recorder; read it when boots fail.</p>
+</div>
+</section>
+
+<!-- ============ S10 ============ -->
+<section id="s10">
+<h2 class="part"><small>YOUR QUESTIONS, ANSWERED</small><span class="no">10</span>FAQ</h2>
+
+<h3 class="sub">Will this make my games faster?</h3>
+<p>Indirectly. The elimination of ad processes, telemetry and re-downloads removes background drains; the 3072 MB/3-CPU rule stops swap when other apps are running; removing the intercept feed means your apps come from Play, not from LD's clone. None of those are frame-rate tools, and none promise you will suddenly get 240 FPS.</p>
+
+<h3 class="sub">Is this legal? Did we crack anything?</h3>
+<p>No patching, repacking or DRM circumvention happens anywhere. We move extra files (reversible), flip LDPlayer's own settings, and use standard Windows firewall/hosts rules. It runs LDPlayer with fewer passengers, not a different LDPlayer.</p>
+
+<h3 class="sub">Will LDPlayer still update?</h3>
+<p>LD always ships as one piece; any update reintroduces the bloat. The Clean Launch watcher and the logon task re-apply the debloat automatically. Disabling the in-guest feed means the update itself installs faster and draws less.</p>
+
+<h3 class="sub">Why the one firewall rule per executable instead of blocking domains?</h3>
+<p>Domains rotate; executable paths do not, until the next LD build reinstalls them &mdash; at which point the old rules silently re-apply (path unchanged) and you win again without any new work.</p>
+
+<h3 class="sub">My friend says "everything came back after the update". Why?</h3>
+<p>Because their cleanup ran once, as a single pass. This is why Step 10 and Step 13 exist &mdash; the fix is a loop, not an event.</p>
+
+<h3 class="sub">I'm not technical. Which steps can I skip?</h3>
+<p>Steps 0&ndash;11 are mechanical. Never skip Step 12 if you care about the in-guest ads, and Step 10 if you care about updates keeping it that way.</p>
+
+<h3 class="sub">Magisk asked to Direct install; do I have to?</h3>
+<p>Yes &mdash; Magisk's binary lives in the boot image; the manager alone does not patch it. Without Direct install, <code>su</code> exists but root never fires.</p>
+
+<h3 class="sub">Can LDPlayer detect that I debloated it?</h3>
+<p>Yes, in the same sense it can detect you removed an uninstaller. It does not phone home about it, and it does not lock features. The bloat is gone, LD still runs, support still works.</p>
+
+<h3 class="sub">Where is LD's official FAQ for all this?</h3>
+<p>There is none. What you just read was produced by doing it carefully, watching what came back, and keeping what proved necessary.</p>
+</section>
+
+<!-- ============ S11 ============ -->
+<section id="s11">
+<h2 class="part"><small>THE HOST OS</small><span class="no">11</span>Windows 10 Lite &mdash; what is added, what is not</h2>
+<p>Some Windows builds are thinned by third parties ("Lite", "Tiny10", handcrafted ISOs). This guide never touches those' Windows: no system files, no shell, no services outside LDPlayer's, no removal of anything host-side except LDPlayer's own binaries.</p>
+<h3 class="sub">Exactly two additions (both reversible, both documented on screen)</h3>
+<table>
+<thead><tr><th>Addition</th><th>Where</th><th>Why it exists</th></tr></thead>
+<tbody>
+<tr><td>Markers: one fenced hosts block (10 addresses)</td><td><code>C:\Windows\System32\drivers\etc\hosts</code></td><td>Blocks the ad/telemetry domains LD answers on launch</td></tr>
+<tr><td>Firewall outbound blocks named <code>LDPlayerBlock-*</code></td><td>Windows Firewall</td><td>Blocks the exact executables, whatever domain they rotate to</td></tr>
+</tbody></table>
+<h3 class="sub">What is intentionally NOT done</h3>
+<ul>
+<li>Defender / Exclusions: not touched.</li>
+<li>Lite-specific components (WiFi, Edge, nowhere-near-essentials): not touched.</li>
+<li>Power plan, services, scheduled tasks outside LDPlayer's own: not touched.</li>
+<li>Your user folders, OneDrive, game saves: not touched.</li>
+</ul>
+<div class="callout infobox"><b>The rule of thumb:</b> if the change could be explained on a post-it in one sentence about LDPlayer, it is fair game. Anything else belongs to a different project.</div>
+</section>
+
+<!-- ============ S12 ============ -->
+<section id="s12">
+<h2 class="part"><small>THE MODEL</small><span class="no">12</span>Why it survives updates</h2>
+<p>LDPlayer is one piece of software that re-ships its full runtime on every update. When the update runs, it copies in whatever it ships &mdash; bloat and all &mdash; and re-enables what you disabled. That is not a hostile fork; it is simply how LDPlayer is built. So the fix is not an event; it is a <b>standing invariant</b>:</p>
+<div class="callout rulebox"><b>The three-move loop:</b> (1) at logon, a hidden task re-vaults anything restored and re-pins; (2) at launch, the Clean Launch shortcut re-vaults whatever re-downloaded during startup; (3) both verifiers tell you whether the invariant held. That is the entire permanence model.</div>
+
+<h3 class="sub">What survives, what does not</h3>
+<table>
+<thead><tr><th>Survives</th><th>Does NOT survive</th></tr></thead>
+<tbody>
+<tr><td>Windows-internal edits: hosts block, firewall rules, service start type</td><td>Guest-internal edits (packages disabled, HOME setting) &mdash; they live in <code>data.vmdk</code> and survive updates unless the update re-images it</td></tr>
+<tr><td>The pinned update timestamps</td><td>The launch-time feed download &mdash; it re-arrives on every launch until the watcher re-vaults it</td></tr>
+<tr><td>The seal on the cache folder</td><td>The installer stub &mdash; it always re-appears; the reapply script always removes it</td></tr>
+</tbody></table>
+
+<h3 class="sub">How to keep the invariant</h3>
+<ol>
+<li>Never launch LDPlayer via the stock icon. Launch via the Clean Launch shortcut.</li>
+<li>After every update, log off and back on. The logon task fires.</li>
+<li>Run both verifiers. They tell you whether the loop held.</li>
+</ol>
+</section>
+
+<!-- ============ S13 ============ -->
+<section id="s13">
+<h2 class="part"><small>PRINT THIS PAGE</small><span class="no">13</span>Final checklist</h2>
+
+<h3 class="sub">Part A &mdash; Windows side</h3>
+<ul class="checklist">
+<li>LDPlayer launched only via <b>Clean Launch</b></li>
+<li><code>verify-debloat.ps1</code> prints <b>ALL CHECKS PASSED</b></li>
+<li>Ad cache exists, empty, deny-write sealed</li>
+<li><code>leidians.config</code>: telemetry pinned to 2100</li>
+<li><code>leidian0.config</code>: <code>advancedSettings.cpuCount = 3</code></li>
+<li>LDPlayer's service: <b>Stopped + Disabled</b></li>
+<li>hosts: one marked block, nothing else</li>
+<li>Firewall: <code>LDPlayerBlock-*</code> all present</li>
+<li>In <code>Documents\XuanZhi9\Applications</code>: no <code>ld_launcher</code>, no <code>cpi.data</code>, nothing hex-named</li>
+<li>In <code>vms\recommendConfigs</code>: only <code>dynamic-key.xml</code> remains</li>
+<li>Brave/other heavy apps closed while playing</li>
+</ul>
+
+<h3 class="sub">Part B &mdash; Inside Android</h3>
+<ul class="checklist">
+<li><code>verify-android.ps1</code> prints <b>ALL ANDROID CHECKS PASSED</b></li>
+<li>Home screen: Lawnchair</li>
+<li><code>pm list packages -d</code> includes LD launcher / LD app-store</li>
+<li>Private DNS: <code>dns.adguard.com</code></li>
+<li>Magisk Direct install done; <code>su -c id</code> prints uid=0</li>
+<li>No LD-store redirect when installing from Play</li>
+</ul>
+
+<h3 class="sub">Part C &mdash; Your job after this</h3>
+<ul class="checklist">
+<li>Every launch of LDPlayer: via the Clean Launch shortcut</li>
+<li>After every update: log off/on, then verify</li>
+<li>Thirty days later: delete <code>C:\LDPlayer\vault</code> and reclaim the space</li>
+</ul>
+
+<div class="callout okbox"><b>When every box is ticked,</b> you are running a stock LDPlayer with its advertising removed &mdash; nothing else changed, nothing hidden, nothing broken.</div>
+</section>
+
+<!-- ============ S14 ============ -->
+<section id="s14">
+<h2 class="part"><small>THE FILES, VERBATIM</small><span class="no">14</span>Appendix: the scripts</h2>
+<p class="muted">Every file this guide creates is reproduced here in full, exactly as it ships. Copy &amp;&nbsp;paste into a new file. One-time, about ten minutes, and you will never need to write any of it by hand.</p>
+<!-- APPENDIX_G_INJECT -->
+<hr class="hr">
+<div class="footer-note"><b>LD DEBLOAT GUIDE</b> &middot; VOL. 1 &middot; 2026 &middot; Every command shown was executed and verified against LDPlayer 9.5.x. The tools find your LDPlayer install automatically; if they cannot, edit the <code>$LD_ROOT</code> line at the top of any script. Nothing here is affiliated with LD or XuanZhi.</div>
+</section>
+</div>
+</body>
+</html>

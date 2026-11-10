@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LD Debloat Guide - The Complete Playbook for a Clean LDPlayer 9</title>
+<style>
+@page { size: A4; margin: 15mm 15mm 16mm 15mm; }
+:root{
+  --paper:#fbfaf7; --navy:#0d1b28; --panel:#12253a; --ink:#1b2530;
+  --line:#e3e0d6; --teal:#12b7a8; --teal-d:#0d8f84; --amber:#f2b64a;
+  --red:#e4572e; --green:#2fbf71; --muted:#546a7e;
+  --code:#0b1a26; --code-ink:#8be0a4;
+}
+*{ box-sizing:border-box; }
+body{
+  font-family:'Segoe UI',Calibri,sans-serif; color:var(--ink); background:#e8e7e1; margin:0;
+  font-size:10pt; line-height:1.48; -webkit-print-color-adjust:exact; print-color-adjust:exact;
+}
+code,kbd,pre{ font-family:'Cascadia Mono',Consolas,'Courier New',monospace; }
+code{ background:#efeee8; border:1px solid var(--line); border-radius:4px; padding:0 4px; font-size:8pt; color:#0b5a52; }
+h1,h2,h3,h4{ margin:0; font-weight:700; }
+
+/* ============ COVER ============ */
+.cover{
+  min-height:265mm; background:linear-gradient(160deg,#14293c 0%,#0d1b28 58%,#08131d 100%);
+  color:#f2efe6; padding:30px 38px 26px; border-radius:4px; position:relative; overflow:hidden;
+  page-break-after:always;
+}
+.cover::before{
+  content:""; position:absolute; inset:0; opacity:.15; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(18,183,168,.35) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(18,183,168,.35) 1px, transparent 1px);
+  background-size:42px 42px;
+}
+.cover > *{ position:relative; }
+.kicker{ font-size:8pt; letter-spacing:5px; color:var(--teal); font-weight:700; margin-top:10px; }
+.cover h1{ font-family:Georgia,serif; font-size:84pt; line-height:.96; letter-spacing:1px; margin:18px 0 4px; color:#fbfaf7; }
+.cover h1 .accent{ color:var(--teal); }
+.tagline{ font-size:12pt; color:#cdd8de; max-width:150mm; line-height:1.4; margin:12px 0 0; }
+.shield{ margin:24px 0 8px; }
+.metatable{ width:100%; border-collapse:collapse; margin-top:26px; font-size:8pt; color:#9db4c6; }
+.metatable td{ padding:7px 0; border-top:1px solid #274054; vertical-align:top; }
+.metatable .k{ color:#f2b64a; letter-spacing:2px; font-size:6.5pt; width:32%; padding-right:14px; text-transform:uppercase; }
+.docfoot{ position:absolute; bottom:0; left:0; right:0; border-top:1px solid #274054; padding:12px 38px; font-size:7pt; color:#6d8395; letter-spacing:1.6px; display:flex; justify-content:space-between; }
+.docfoot b{ color:#cdd8de; }
+
+/* ============ TOC ============ */
+.tocpage{ background:var(--paper); padding:9mm 10mm; }
+.toc-title{ font-family:Georgia,serif; font-size:26pt; color:var(--navy); border-bottom:3px solid var(--teal); display:inline-block; padding-bottom:4px; margin-bottom:6px; }
+.toc-sub{ font-size:8pt; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:12px; }
+ol.toc{ counter-reset:sec; list-style:none; margin:0; padding:0; column-count:2; column-gap:10mm; font-size:9pt; }
+ol.toc li{ break-inside:avoid; padding:5px 0 5px 34px; position:relative; border-bottom:1px dotted var(--line); }
+ol.toc li::before{ counter-increment:sec; content:"0" counter(sec); position:absolute; left:0; top:5px; font-family:Georgia,serif; font-size:11pt; color:var(--teal-d); font-weight:700; }
+ol.toc a{ color:var(--navy); text-decoration:none; font-weight:600; }
+ol.toc .sub{ display:block; font-size:7pt; color:var(--muted); margin-top:2px; font-weight:400; }
+
+/* ============ CONTENT ============ */
+.page{ background:var(--paper); padding:8mm 10mm; }
+h2.part{
+  display:block; background:var(--navy); color:#fbfaf7; border-radius:6px; padding:12px 16px 11px;
+  margin:22px 0 12px; border-left:6px solid var(--teal); page-break-inside:avoid; page-break-after:avoid;
+}
+h2.part small{ display:block; font-size:7.5pt; letter-spacing:4px; color:var(--amber); font-weight:800; margin-bottom:4px; }
+h2.part .no{ float:right; font-family:Georgia,serif; font-size:26pt; color:var(--teal); line-height:.9; padding-left:14px; }
+h3.sub{ font-size:12pt; color:var(--navy); margin:16px 0 8px; padding-bottom:4px; border-bottom:2px solid var(--teal); display:inline-block; font-weight:700; }
+p{ margin:8px 0; } .muted{ color:var(--muted); font-size:8.5pt; }
+strong{ color:var(--navy); }
+.cover strong{ color:#f2b64a; }
+
+pre.cmd{
+  background:var(--code); color:var(--code-ink); border-radius:6px; padding:11px 14px;
+  font-size:7.8pt; line-height:1.5; margin:8px 0; white-space:pre-wrap; overflow-wrap:anywhere;
+  border:1px solid #1e3a4d; position:relative; padding-top:22px; page-break-inside:avoid;
+}
+pre.cmd::before{
+  content:"LD \00B7 COMMAND"; position:absolute; top:0; left:0; right:0; font-size:6pt; letter-spacing:2px;
+  color:#ffd97a; background:#0d2231; padding:5px 14px; border-bottom:1px solid #1e3a4d; border-radius:6px 6px 0 0;
+}
+.terminal{
+  background:#04090f; color:#9df0b4; border-radius:6px; padding:11px 14px; font-size:7.8pt;
+  white-space:pre-wrap; border:1px solid #17435c; margin:8px 0; position:relative; padding-top:22px; page-break-inside:avoid;
+}
+.terminal::before{
+  content:"\25CF  \25CF  \25CF   OUTPUT"; position:absolute; top:0; left:0; right:0; font-size:6pt; letter-spacing:2px;
+  color:#ffd97a; background:#0d2231; padding:5px 14px; border-bottom:1px solid #17435c; border-radius:6px 6px 0 0;
+}
+.terminal b{ color:#ffd97a; }
+
+.chip{ display:inline-block; font-size:6.5pt; font-weight:800; letter-spacing:2px; border-radius:3px; padding:2px 9px; vertical-align:2px; border:1px solid; }
+.chip.easy{ background:#e9f9ef; color:#0e7a45; border-color:#2fbf71; }
+.chip.medium{ background:#fdf6da; color:#8a6a08; border-color:#f2b64a; }
+.chip.hard{ background:#ffe9dd; color:#a33b16; border-color:#e4572e; }
+.chip.expert{ background:#ece6fb; color:#5a35b5; border-color:#a78bfa; }
+.chip.time{ background:#efeee8; color:#3c5064; border-color:#c9c6bb; }
+
+.callout{ border-radius:6px; padding:11px 15px; margin:10px 0; font-size:9pt; page-break-inside:avoid; border:1px solid; position:relative; padding-left:38px; }
+.callout::before{ position:absolute; left:13px; top:11px; font-family:Georgia,serif; font-size:13pt; }
+.rulebox{ background:#0d1b28; color:#dce7ee; border-color:#0d1b28; }
+.rulebox b{ color:#f2b64a; }
+.rulebox::before{ content:"\2605"; color:#f2b64a; }
+.warnbox{ background:#fdf0e7; border-color:#e4572e; color:#5e2a12; }
+.warnbox::before{ content:"!"; color:#e4572e; font-weight:900; }
+.okbox{ background:#eafaf0; border-color:#2fbf71; color:#10492a; }
+.okbox::before{ content:"\2713"; color:#2fbf71; font-weight:900; }
+.infobox{ background:#edf4fc; border-color:#3b82f6; color:#173a5e; }
+.infobox::before{ content:"i"; color:#3b82f6; font-weight:900; font-style:italic; }
+
+.step{ border:1px solid var(--line); border-radius:8px; overflow:hidden; margin:12px 0; page-break-inside:avoid; background:#fff; box-shadow:0 1px 3px rgba(13,27,40,.08); }
+.step-head{ background:linear-gradient(90deg,#0d1b28 0%,#16293d 100%); color:#f2efe6; padding:9px 14px; display:flex; align-items:center; gap:12px; border-bottom:3px solid var(--teal); }
+.step-num{ background:var(--teal); color:#04241f; font-weight:900; border-radius:6px; padding:2px 11px; font-family:Georgia,serif; font-size:14pt; }
+.step-title{ font-size:12.5pt; font-weight:700; }
+.step-meta{ margin:8px 14px 0; padding:7px 0 0; border-bottom:1px dashed var(--line); font-size:8pt; color:var(--muted); letter-spacing:.4px; }
+.step-body{ padding:9px 14px 12px; }
+.step-body h4{ font-size:7.5pt; letter-spacing:3px; color:var(--teal-d); margin:12px 0 4px; font-weight:800; }
+
+table{ width:100%; border-collapse:collapse; font-size:8pt; margin:10px 0; background:#fff; border:1px solid var(--line); }
+th{ background:var(--navy); color:#f2efe6; text-align:left; padding:6px 9px; letter-spacing:1.2px; font-size:7pt; text-transform:uppercase; }
+td{ border-bottom:1px solid var(--line); padding:6px 9px; vertical-align:top; }
+tr:nth-child(even) td{ background:#f6f5f0; }
+.small td,.small th{ padding:4px 7px; }
+
+.checklist{ list-style:none; padding:0; columns:2; column-gap:18px; }
+.checklist li{ padding:5px 0 5px 24px; position:relative; border-bottom:1px dotted var(--line); break-inside:avoid; }
+.checklist li::before{ content:"\2610"; position:absolute; left:2px; font-size:12pt; color:var(--teal-d); }
+
+.footer-note{ font-size:7.5pt; color:#7d8fa1; border-top:1px solid var(--line); padding-top:10px; margin-top:18px; }
+.two-col{ column-count:2; column-gap:16px; }
+.kv{ font-size:8.5pt; }
+.toc-inline{ font-size:7pt; color:var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- ============ COVER ============ -->
+<div class="cover">
+  <div class="kicker">THE OFFICIAL FIELD MANUAL &nbsp;&middot;&nbsp; VOLUME 1 &nbsp;&middot;&nbsp; 2026</div>
+  <h1>LD<br><span class="accent">DEBLOAT</span><br>GUIDE</h1>
+  <p class="tagline">How to strip <strong>LDPlayer 9</strong> down to a clean, fast, silent Android emulator &mdash; and keep it that way after every update and every launch.</p>
+
+  <svg class="shield" width="300" height="112" viewBox="0 0 300 112" xmlns="http://www.w3.org/2000/svg">
+    <path d="M54 4 L102 20 V62 C102 88 82 100 54 108 C26 100 6 88 6 62 V20 Z" fill="#12253a" stroke="#12b7a8" stroke-width="2.5"/>
+    <path d="M32 62 l16 15 l30 -40" fill="none" stroke="#2fbf71" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="122" y="38" fill="#f2efe6" font-size="16" font-weight="800" font-family="Segoe UI,sans-serif">EVERY STEP.</text>
+    <text x="122" y="58" fill="#f2efe6" font-size="16" font-weight="800" font-family="Segoe UI,sans-serif">EVERY TRICK.</text>
+    <text x="122" y="78" fill="#12b7a8" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">EVERY ERROR SOLVED.</text>
+  </svg>
+
+  <table class="metatable">
+    <tr><td class="k">What you need</td><td>Only LDPlayer 9 on Windows. No programming skills required &mdash; every command is copy&ndash;pasteable; every failure has its fix listed.</td></tr>
+    <tr><td class="k">Result</td><td>No LDPlayer ads &middot; no pop-ups &middot; no crash reporter &middot; no app-store install redirects &middot; no auto-start service &middot; a tuned instance that survives every LDPlayer update by healing itself</td></tr>
+    <tr><td class="k">Time</td><td>~90 minutes once, then ~2 minutes per update forever</td></tr>
+    <tr><td class="k">Risk</td><td>Nothing is deleted &mdash; every removed file is moved to a vault folder. Windows 10 (including Lite) is never modified: only two marked, reversible additions are ever made.</td></tr>
+  </table>
+
+  <div class="docfoot"><span><b>LD DEBLOAT GUIDE</b> &middot; VOL. 1</span><span>2026 &middot; REV 4 &middot; PUBLIC EDITION</span></div>
+</div>
+
+<!-- ============ TOC ============ -->
+<div class="tocpage">
+  <div class="toc-title">Contents</div>
+  <div class="toc-sub">Every section, in order &middot; read &sect;1 first</div>
+  <ol class="toc">
+    <li><a href="#s1">Read me first</a><span class="sub">What this is &middot; what you need &middot; result</span></li>
+    <li><a href="#s2">The bloat, itemized</a><span class="sub">What LDPlayer ships and what it does</span></li>
+    <li><a href="#s3">The rules</a><span class="sub">Eight rules that keep you out of trouble</span></li>
+    <li><a href="#s4">Know your target</a><span class="sub">What to check before you change anything</span></li>
+    <li><a href="#s5">The Steps, 0&ndash;13</a><span class="sub">The complete debloat &middot; copy&ndash;pasteable</span></li>
+    <li><a href="#s6">Errors &amp; fixes</a><span class="sub">The complete field list</span></li>
+    <li><a href="#s7">Your new toolkit</a><span class="sub">Every script this creates &middot; when to run it</span></li>
+    <li><a href="#s8">Difficulty &times; time &times; risk</a><span class="sub">The matrix at a glance</span></li>
+    <li><a href="#s9">Glossary</a><span class="sub">Plain English, A&ndash;Z</span></li>
+    <li><a href="#s10">FAQ</a><span class="sub">Direct answers</span></li>
+    <li><a href="#s11">Windows 10 Lite</a><span class="sub">What is added (two things) and what is not</span></li>
+    <li><a href="#s12">Why it survives updates</a><span class="sub">The permanence model</span></li>
+    <li><a href="#s13">Final checklist</a><span class="sub">Tape it to the monitor</span></li>
+    <li><a href="#s14">Appendix: the scripts</a><span class="sub">Every file reproduced verbatim</span></li>
+  </ol>
+</div>
+
+<!-- ============ S1 ============ -->
+<div class="page">
+<section id="s1">
+<h2 class="part"><small>START HERE</small><span class="no">01</span>Read me first</h2>
+<h3 class="sub">What this is</h3>
+<p>A precision debloat of LDPlayer 9. It removes, disables or walls off every component whose job is advertising at the user, reporting on the user, or selling promoted games to the user, while leaving every component responsible for running games untouched.</p>
+
+<h3 class="sub">What you will end with</h3>
+<p>No pop-ups. No featured-games wall. No install interception. No crash reporter. No auto-start service at logon. A guest sized for stability. And a small enforcement layer that re-applies the debloat automatically after updates, because LDPlayer updates re-ship its own bloat silently.</p>
+
+<h3 class="sub">What you need</h3>
+<ul>
+  <li>Windows with LDPlayer 9 installed (paths in this guide assume <code>C:\LDPlayer\LDPlayer9</code>).</li>
+  <li>Administrator rights. Right-clicking and choosing "Run as administrator" is enough; the scripts here self-elevate.</li>
+  <li>Roughly 90 minutes the first time. The hands-on work is ~15 minutes; the rest is understanding, so it never needs doing again.</li>
+</ul>
+
+<h3 class="sub">What you will NOT get</h3>
+<p>This guide does not modify the Android image, game data, or Windows itself. It does not repack LDPlayer, does not bypass license checks, does not unlock paid features. It removes the advertising payload LDPlayer ships with because LDPlayer runs without it.</p>
+</section>
+
+<!-- ============ S2 ============ -->
+<section id="s2">
+<h2 class="part"><small>THE ENEMY</small><span class="no">02</span>The bloat, itemized</h2>
+<p>LDPlayer 9 installs with three classes of non-essential software. Know them by shape, not by file name: names change between builds, these classes do not.</p>
+
+<h3 class="sub">Class 1 &mdash; The advertising layer</h3>
+<table>
+<thead><tr><th>What it is</th><th>Where it lives</th><th>What it does</th></tr></thead>
+<tbody>
+<tr><td>ldplayerpartner.exe &amp; ldplayerpartner2.exe</td><td>The install root</td><td>Pop-up ad launcher; fires on launch and on a timer</td></tr>
+<tr><td>upload\ folder &mdash; <b>ldupload.exe</b> + OBS SDK runtime</td><td><code>LDPlayer9\upload\</code></td><td>Crash telemetry; ships data to a third-party storage bucket</td></tr>
+<tr><td>launcherskin\ images + en.mp4</td><td><code>LDPlayer9\launcherskin\</code>, <code>LDPlayer9\data\</code></td><td>Ad creative shown inside the launcher</td></tr>
+<tr><td>recommendConfigs\ + dir_*.dir</td><td><code>LDPlayer9\vms\recommendConfigs\</code></td><td>"Key-mapping for you" game suggestions with ad placements baked in</td></tr>
+<tr><td>LDPlayerENSvr service</td><td>Windows services (Automatic)</td><td>Auto-starts the launcher plumbing, including the ad path, before you click anything</td></tr>
+</tbody></table>
+
+<h3 class="sub">Class 2 &mdash; The interception layer</h3>
+<table>
+<thead><tr><th>What it is</th><th>Where it lives</th><th>What it does</th></tr></thead>
+<tbody>
+<tr><td>ld_launcher intercept feed (~460 KB JSON)</td><td><code>Documents\XuanZhi9\Applications\ld_launcher\</code></td><td>Maps Google Play packages to LD-store twins; on an intercepted install, redirects you to LD-store instead</td></tr>
+<tr><td>cpi.data</td><td><code>Documents\XuanZhi9\Applications\</code></td><td>The ad-slot map: which screen gets which units (LauncherBottom, AppStoreSearch, AppStoreMain)</td></tr>
+<tr><td>fetch stamp (hex name)</td><td><code>Documents\XuanZhi9\Applications\</code></td><td>Last-fetch date for the ad feed; tells LD when to pull again</td></tr>
+</tbody></table>
+
+<h3 class="sub">Class 3 &mdash; The maintenance layer pretending to be plumbing</h3>
+<table>
+<thead><tr><th>What it is</th><th>Where it lives</th><th>What it does</th></tr></thead>
+<tbody>
+<tr><td>bugreport.exe (two copies)</td><td>The install root AND <code>ldmutiplayer\</code></td><td>Crash reporter that also uploads; exists in both processes</td></tr>
+<tr><td>dnrepairer.exe</td><td>The install root</td><td>"Repair" tool that re-downloads everything the debloat removed</td></tr>
+<tr><td>LDPlayer_&lt;build&gt;.exe</td><td>The install root</td><td>Installer stub left behind by every update (~800 MB)</td></tr>
+<tr><td>the partner report data</td><td><code>%APPDATA%\XuanZhi9\partner_report.data</code></td><td>Timestamp of last successful report POST (proves it reported)</td></tr>
+<tr><td>the live ad cache</td><td><code>%APPDATA%\XuanZhi9\cache\</code></td><td>Holds re-downloaded ad images/configs; seal it with one ACL deny rule</td></tr>
+</tbody></table>
+
+<div class="callout infobox"><b>Single most important fact:</b> LDPlayer re-downloads Class 2 and 3 on launch and on update, forcibly. Any cleanup that runs only once is already undone by the second thing you do. Every fix in this guide is engineered against exactly that.</div>
+</section>
+
+<!-- ============ S3 ============ -->
+<section id="s3">
+<h2 class="part"><small>READ TWICE</small><span class="no">03</span>The rules</h2>
+
+<div class="callout rulebox"><b>RULE 1 — Rename first. Never delete.</b> Every removal in this guide is a move, not a delete. If something breaks, you can reason back. You cannot reason back from a deletion.</div>
+<div class="callout rulebox"><b>RULE 2 — Read the logs, never guess.</b> VBox.log, LD's own log files and the console output tell you what actually happened. If a change disappears, the log says why.</div>
+<div class="callout rulebox"><b>RULE 3 — Measure before you conclude.</b> "The debloat broke the emulator" is never a starting point. Look first (VBox.log, <code>pm list packages</code>, <code>verify-debloat.ps1</code>), conclude second.</div>
+<div class="callout rulebox"><b>RULE 4 — Bisect with last-known-good.</b> Change one variable at a time and re-test. Fancier fixes fail for teeny reasons, not grand ones.</div>
+<div class="callout rulebox"><b>RULE 5 — Verify before you destroy.</b> If a verification step prints something odd, stop and look at it by hand. Unknown output is a red flag, not a green light.</div>
+<div class="callout rulebox"><b>RULE 6 — Never strip ACLs without setting replacements in the same move.</b> Removing permissions outright can make a folder unreachable even for you. Always deny exactly one thing, replace nothing else.</div>
+<div class="callout rulebox"><b>RULE 7 — Pattern-match, never hardcode.</b> LD renames its own packages between builds; grep for patterns, never a fixed string.</div>
+<div class="callout rulebox"><b>RULE 8 — Updates undo debloats. Plan for it.</b> Every fix in this guide assumes an update will one day restore the bloat on its own. The logon task and the Clean Launch watcher exist precisely because updates always do.</div>
+</section>
+
+<!-- ============ S4 ============ -->
+<section id="s4">
+<h2 class="part"><small>KNOW YOUR SHIP</small><span class="no">04</span>Know your target</h2>
+<p>Two minutes before you touch anything. This tells you exactly what this box is running.</p>
+<pre class="cmd">& "C:\LDPlayer\LDPlayer9\ldconsole.exe" list
+& "C:\LDPlayer\LDPlayer9\ldconsole.exe" list2
+(Get-Item "C:\LDPlayer\LDPlayer9\dnplayer.exe").VersionInfo.ProductVersion
+Get-Service LDPlayerENSvr | Select-Object Status, StartType
+Get-CimInstance Win32_OperatingSystem | Select-Object @{n="FreeRAM_GB";e={[math]::Round($_.FreePhysicalMemory/1MB,2)}}
+Get-ChildItem "C:\LDPlayer\LDPlayer9" | Sort-Object Length -Descending | Select-Object -First 8 Name, Length</pre>
+
+<h3 class="sub">What you are looking for</h3>
+<ul>
+  <li><b>The LDPlayer version</b> (file version of <code>dnplayer.exe</code>). Updates change what the bloat is called, never the classes above.</li>
+  <li><b>The instance count and state.</b> Under <code>C:\LDPlayer\LDPlayer9\vms\leidian0\</code> you will find one folder per instance.</li>
+  <li><b>LDPlayerENSvr</b> — usually Auto; you will set it to Disabled on Step 7.</li>
+  <li><b>Two config files</b> worth a look before editing anything: <code>vms\config\leidians.config</code> (update/telemetry pins) and <code>vms\config\leidian0.config</code> (instance CPU/RAM).</li>
+  <li><b>Shared folders</b> — where LD exposes host folders to the guest: <code>Documents\XuanZhi9\{Applications, Pictures, Misc}</code>.</li>
+</ul>
+
+<div class="callout infobox"><b>Stop and screenshot</b> the launcher window (and the two config files) before you change anything. Not every problem goes away; but every problem becomes obvious after the first look.</div>
+</section>
