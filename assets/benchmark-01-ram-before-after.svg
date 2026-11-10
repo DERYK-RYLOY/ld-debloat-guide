@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 880" width="1280" height="880" font-family="Segoe UI, sans-serif">
+  <!-- benchmark-01-ram-before-after.svg - LD DEBLOAT GUIDE repo -->
+  <!-- Palette matches benchmark-02/03/04: cream paper, navy type, red before, teal after -->
+  <rect width="1280" height="880" fill="#f7f6f0"/>
+  <line x1="0" y1="150" x2="1280" y2="150" stroke="#e5e2d8" stroke-width="1"/>
+
+  <!-- title -->
+  <text x="64" y="78" fill="#16324a" font-size="46" font-weight="800" letter-spacing="2" font-family="Georgia, serif">RAM &#8212; THE BEFORE &#8594; AFTER THAT IS REAL</text>
+  <text x="64" y="112" fill="#6b7d8d" font-size="17">measured on the test rig &#183; same machine &#183; same Brave (~2 GB) &#183; same LDPlayer 9.5.41.1 &#183; 2026-11-10</text>
+
+  <!-- hero bar 1: BEFORE -->
+  <text x="64" y="212" fill="#e4572e" font-size="13" font-weight="800" letter-spacing="3">BEFORE &#8212; BLOATED &#183; 4096 MB CAP &#183; 4 CPU</text>
+  <rect x="64" y="226" width="640" height="64" rx="6" fill="#efece3" stroke="#d8d4c8"/>
+  <rect x="64" y="226" width="0" height="64" rx="6" fill="#e4572e">
+    <animate attributeName="width" from="0" to="153" dur="1.2s" begin="0.2s" fill="freeze" calcMode="spline" keySplines="0.2 0 0.2 1"/>
+  </rect>
+  <text x="232" y="267" fill="#16324a" font-size="26" font-weight="800" opacity="0">0.77 GB
+    <animate attributeName="opacity" from="0" to="1" dur="0.6s" begin="1.0s" fill="freeze"/>
+  </text>
+  <text x="64" y="322" fill="#6b7d8d" font-size="13" opacity="0">the amount of host RAM left with Brave open &#8212; the &#8220;not responding&#8221; number
+    <animate attributeName="opacity" from="0" to="1" dur="0.5s" begin="0.9s" fill="freeze"/>
+  </text>
+
+  <!-- hero bar 2: AFTER -->
+  <text x="64" y="392" fill="#0d8f84" font-size="13" font-weight="800" letter-spacing="3">AFTER &#8212; DEBLOATED &#183; 3072 MB CAP &#183; 3 CPU</text>
+  <rect x="64" y="406" width="640" height="64" rx="6" fill="#efece3" stroke="#d8d4c8"/>
+  <rect x="64" y="406" width="0" height="64" rx="6" fill="#12b7a8">
+    <animate attributeName="width" from="0" to="663" dur="1.6s" begin="1.0s" fill="freeze" calcMode="spline" keySplines="0.2 0 0.2 1"/>
+  </rect>
+  <text x="742" y="447" fill="#0d8f84" font-size="26" font-weight="800" opacity="0">3.35 GB
+    <animate attributeName="opacity" from="0" to="1" dur="0.6s" begin="2.0s" fill="freeze"/>
+  </text>
+  <text x="64" y="502" fill="#6b7d8d" font-size="13" opacity="0">the same box, same Brave, same emulator &#8212; just bloated nothing
+    <animate attributeName="opacity" from="0" to="1" dur="0.5s" begin="1.9s" fill="freeze"/>
+  </text>
+
+  <!-- delta arrow -->
+  <g opacity="0">
+    <animate attributeName="opacity" from="0" to="1" dur="0.6s" begin="2.3s" fill="freeze"/>
+    <rect x="1010" y="250" width="206" height="212" rx="10" fill="#16324a"/>
+    <text x="1113" y="330" fill="#f7f6f0" font-size="15" font-weight="700" letter-spacing="2" text-anchor="middle">HOST FREE</text>
+    <text x="1113" y="356" fill="#f7f6f0" font-size="15" font-weight="700" letter-spacing="2" text-anchor="middle">RAM DELTA</text>
+    <text x="1113" y="398" fill="#12b7a8" font-size="40" font-weight="800" text-anchor="middle" font-family="Georgia, serif">+335%</text>
+    <text x="1113" y="426" fill="#9db4c6" font-size="11" text-anchor="middle">+2.58 GB regained</text>
+  </g>
+
+  <!-- the honest footnote panel -->
+  <rect x="64" y="540" width="1152" height="200" rx="10" fill="#ffffff" stroke="#e5e2d8"/>
+  <text x="88" y="578" fill="#16324a" font-size="13" font-weight="800" letter-spacing="3">THE HONEST PART &#8212; READ THIS BEFORE REPOSTING</text>
+  <text x="88" y="612" fill="#3c5064" font-size="15">&#8226; LD itself idles around ~150&#8211;600 MB committed (engine ~400&#8211;460 MB + dnplayer ~100 MB); the 3072 MB is a CAP, not appetite.</text>
+  <text x="88" y="638" fill="#3c5064" font-size="15">&#8226; The freeze was never &#8220;LD is heavy&#8221; &#8212; it was Brave (~2 GB) + Windows (~3 GB) + the swap storm the 4096 MB cap invited.</text>
+  <text x="88" y="664" fill="#3c5064" font-size="15">&#8226; What the debloat removed: background telemetry, ad processes, the install re-downloader &#8212; the drain AROUND LD, not LD's cap.</text>
+  <text x="88" y="690" fill="#3c5064" font-size="15">&#8226; Partner-process RSS was never captured &#8212; we do not chart numbers we did not measure.</text>
+  <text x="88" y="716" fill="#0d8f84" font-size="15" font-weight="700">&#8226; UPDATE: 19 &#8594; 25 &#8594; 36 checks passing &#183; the fix survives every update and every launch.</text>
+
+  <!-- footer -->
+  <text x="64" y="800" fill="#6b7d8d" font-size="13">Source: verify-debloat.ps1 &#183; verify-android.ps1 &#183; live measurements 2026-11-10 &#183; i5-8350U &#183; 8 GB &#183; UHD 620 &#183; Windows 10 Lite</text>
+  <text x="64" y="824" fill="#6b7d8d" font-size="12">LD DEBLOAT GUIDE &#183; companion benchmarks live in the repo README &#183; see LD-Debloat-Guide.pdf &#183; figures are the reference rig, not a lab</text>
+</svg>
