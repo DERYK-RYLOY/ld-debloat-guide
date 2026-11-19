@@ -2,6 +2,8 @@
 # Works for any LDPlayer version installed at the usual locations. Self-elevates to admin.
 # Everything it moves goes into C:\LDPlayer\vault. Nothing is deleted.
 # If auto-detection fails, set $LD_ROOT by hand (the folder that contains ldconsole.exe).
+# -Silent : log to file only (used by the logon scheduled task).
+param([switch]$Silent)
 $LD_ROOT = $null
 foreach ($candidate in @('C:\LDPlayer\LDPlayer9','C:\LDPlayer\LDPlayer12','C:\LDPlayer\LDPlayer5','C:\LDPlayer\LDPlayer4','C:\LDPlayer\LDPlayer9x')) {
   if (Test-Path "$candidate\ldconsole.exe") { $LD_ROOT = $candidate; break }
@@ -16,7 +18,7 @@ $Log = 'C:\LDPlayer\reapply-log.txt'
 function Log($m){
   $line = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')  $m"
   Add-Content -Path $Log -Value $line -Encoding ASCII
-  Write-Host $line
+  if (-not $Silent) { Write-Host $line }
 }
 Log "using install root: $LD_ROOT"
 $LD_PACKAGE = "$LD_ROOT\..\ldmutiplayer"
