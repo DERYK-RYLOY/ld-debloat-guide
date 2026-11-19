@@ -62,7 +62,6 @@ $adb = 'C:\LDPlayer\LDPlayer9\adb.exe'
 & $adb shell settings put global private_dns_mode hostname
 & $adb shell settings put global private_dns_specifier dns.adguard.com
 & $adb shell cmd package set-home-activity ch.deletescape.lawnchair/ch.deletescape.lawnchair.Launcher
-& $adb shell 'su -c id'
 ```
 
 ## Recovery

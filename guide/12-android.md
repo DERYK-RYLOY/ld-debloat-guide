@@ -1,10 +1,10 @@
-# 12 — Android side
+# 12 — Android side (Lawnchair)
 
 ## Objective
 
-Apply the in-guest portion over ADB: disable LD's own apps, force ad-blocking DNS, and restore the preferred launcher HOME. This lives inside `data.vmdk` and is independent of the Windows-side sweep.
+Set Lawnchair as the guest HOME app and disable LD's own launcher/app-store over ADB. This lives inside `data.vmdk`; it is independent of the Windows-side sweep. Aurora Store, Magisk and root are out of scope.
 
-## 1. Start the emulator and expose ADB
+## 1. Expose ADB
 
 ```powershell
 & 'C:\LDPlayer\LDPlayer9\ldconsole.exe' launch --index 0
@@ -13,17 +13,15 @@ Apply the in-guest portion over ADB: disable LD's own apps, force ad-blocking DN
 
 `emulator-5554  device` must appear. If not: **LDPlayer → gear → Other → ADB debugging: ON**. Updates and fresh instances reset this switch.
 
-## 2. Install replacements (requires local APKs)
+## 2. Install Lawnchair
 
 ```powershell
 $adb = 'C:\LDPlayer\LDPlayer9\adb.exe'
-& $adb install -r 'C:\ld-apps\Lawnchair.apk'
-& $adb install -r 'C:\ld-apps\Aurora.apk'
-& $adb install -r 'C:\ld-apps\Magisk.apk'
-& $adb shell pm list packages -3
+& $adb install -r "$env:USERPROFILE\Downloads\ld-apps\Lawnchair.apk"
+& $adb shell pm list packages -3 | Select-String 'lawnchair'
 ```
 
-Sources: Lawnchair releases (`github.com/LawnchairLauncher/lawnchair`), Aurora Store (`f-droid.org/packages/com.aurora.store`), Magisk releases (`github.com/topjohnwu/Magisk/releases`). Verify packages with `aapt dump badging` before installing.
+Source: Lawnchair releases (`github.com/LawnchairLauncher/lawnchair`). Verify the package with `aapt dump badging` before installing.
 
 ## 3. Auto re-apply (recommended)
 
@@ -31,7 +29,7 @@ Sources: Lawnchair releases (`github.com/LawnchairLauncher/lawnchair`), Aurora S
 powershell -NoProfile -ExecutionPolicy Bypass -File C:\LDPlayer\android-refresh.ps1
 ```
 
-The script pattern-matches LD packages (`launcher3`, `ld.appstore`, `printspooler`, `dreams.phototable`, `ld.market`, `ldmnq`), sets Private DNS to `dns.adguard.com`, and sets Lawnchair as HOME when installed.
+The script pattern-matches LD packages (`launcher3`, `ld.appstore`, `printspooler`, `dreams.phototable`, `ld.market`, `ldmnq`), sets Private DNS to `dns.adguard.com`, and sets Lawnchair as HOME when installed. It is re-applied by `reapply-debloat.ps1` whenever the emulator is attached.
 
 ## 4. Manual equivalents
 
@@ -39,37 +37,28 @@ The script pattern-matches LD packages (`launcher3`, `ld.appstore`, `printspoole
 $adb = 'C:\LDPlayer\LDPlayer9\adb.exe'
 & $adb shell settings put global private_dns_mode hostname
 & $adb shell settings put global private_dns_specifier dns.adguard.com
-Get-ChildItem 'C:\LDPlayer\LDPlayer9\vms\config' -Filter '*.config' | Out-Null
-
-# list and disable matched packages
 $pkts = (& $adb shell pm list packages | Out-String) -replace 'package:','' -split "`r?`n"
 $pkts | Where-Object { $_ -match 'launcher3|ld\.appstore|printspooler|dreams\.phototable|ld\.market|ldmnq' } |
   ForEach-Object { & $adb shell pm disable-user --user 0 $_ }
 & $adb shell cmd package set-home-activity ch.deletescape.lawnchair/ch.deletescape.lawnchair.Launcher
 ```
 
-## 5. Root (manual step)
-
-Magisk → Install → Direct install → Reboot. Verify:
-
-```powershell
-& 'C:\LDPlayer\LDPlayer9\adb.exe' shell 'su -c id'   # uid=0(root)
-```
-
-## 6. Verify
+## 5. Verify
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File C:\LDPlayer\verify-android.ps1
 "exit=$LASTEXITCODE"
 ```
 
+Checks: Lawnchair installed, Private DNS = adguard, Lawnchair is HOME, LD packages disabled, no promoted LD packages remain.
+
 ## Failure modes
 
 | Symptom | Fix |
 |---|---|
-| `adb devices` empty | Enable ADB debugging in the guest; check LDPlayer → gear → Other |
-| Lawnchair "not installed" | Install the APK first |
-| `su: not found` | Magisk Direct install not done |
+| `adb devices` empty | Enable ADB debugging in the guest; gear → Other → ADB debugging: ON |
+| Lawnchair "not installed" | Install the APK first (step 2) |
 | HOME resets after update | Update re-imaged `data.vmdk` — re-run `android-refresh.ps1` |
+| ADB off again | Re-enable after every update |
 
 **Next:** [13 — Maintenance](13-maintenance.md)

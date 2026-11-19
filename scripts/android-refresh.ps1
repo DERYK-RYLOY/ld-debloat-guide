@@ -35,8 +35,8 @@ foreach ($p in $all) {
 }
 
 # 3) Lawnchair back as HOME if installed
-$home = (& $adb shell cmd package query-activities -a android.intent.action.MAIN -c android.intent.category.HOME | Out-String)
-if ($home -match 'ch\.deletescape\.lawnchair') {
+$homeActivity = (& $adb shell cmd package query-activities -a android.intent.action.MAIN -c android.intent.category.HOME | Out-String)
+if ($homeActivity -match 'ch\.deletescape\.lawnchair') {
   & $adb shell cmd package set-home-activity ch.deletescape.lawnchair/ch.deletescape.lawnchair.Launcher | Out-Null
   Log 'HOME set: Lawnchair'
 } else {

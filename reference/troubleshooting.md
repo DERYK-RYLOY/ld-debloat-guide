@@ -56,7 +56,6 @@ Failure → cause → exact fix. Applies to the Windows-side sweep, the schedule
 | `adb devices` empty | ADB debugging OFF in guest | LDPlayer → gear → Other → ADB debugging: ON |
 | ADB off again | Update/fresh instance reset it | Re-enable after every update |
 | HOME resets to LD launcher | Guest re-imaged | Re-run `android-refresh.ps1` |
-| `su: not found` | Magisk boot patch missing | Magisk → Install → Direct install → Reboot |
 
 ## Verifiers
 
